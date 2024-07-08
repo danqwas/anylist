@@ -8,6 +8,8 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { ItemsModule } from './items/items.module';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -24,7 +26,6 @@ import { ItemsModule } from './items/items.module';
       includeStacktraceInErrorResponses: false,
     }),
 
-    ItemsModule,
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST,
@@ -35,6 +36,10 @@ import { ItemsModule } from './items/items.module';
       autoLoadEntities: true,
       synchronize: true,
     }),
+
+    ItemsModule,
+    UsersModule,
+    AuthModule,
   ],
 })
 export class AppModule {}
