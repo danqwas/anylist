@@ -1,15 +1,19 @@
 import { join } from 'path';
 
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
-import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { ApolloDriver } from '@nestjs/apollo';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
+import { JwtService } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { AuthModule } from './auth/auth.module';
 import { ItemsModule } from './items/items.module';
 import { UsersModule } from './users/users.module';
-import { AuthModule } from './auth/auth.module';
+import { ListsModule } from './lists/lists.module';
+import { CommonModule } from './common/common.module';
+import { ListItemModule } from './list-item/list-item.module';
 
 @Module({
   imports: [
@@ -18,13 +22,30 @@ import { AuthModule } from './auth/auth.module';
       envFilePath: '.env',
     }),
 
-    GraphQLModule.forRoot<ApolloDriverConfig>({
+    GraphQLModule.forRootAsync({
+      imports: [AuthModule],
+      inject: [JwtService],
+      driver: ApolloDriver,
+      useFactory: async (jwtService: JwtService) => ({
+        autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
+        playground: false,
+        plugins: [ApolloServerPluginLandingPageLocalDefault()],
+        context({ req }) {
+          /* const token = req.headers.authorization?.replace('Bearer ', '') || '';
+          if (!token) throw Error('Token needed');
+          const payload = jwtService.decode(token);
+
+          if (!payload) throw Error('Token needed'); */
+        },
+      }),
+    }),
+    /* GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
       playground: false,
       plugins: [ApolloServerPluginLandingPageLocalDefault()],
       includeStacktraceInErrorResponses: false,
-    }),
+    }), */
 
     TypeOrmModule.forRoot({
       type: 'postgres',
@@ -40,6 +61,9 @@ import { AuthModule } from './auth/auth.module';
     ItemsModule,
     UsersModule,
     AuthModule,
+    ListsModule,
+    CommonModule,
+    ListItemModule,
   ],
 })
 export class AppModule {}
